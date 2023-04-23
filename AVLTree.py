@@ -32,7 +32,7 @@ class AVLNode(object):
 	@returns: the key of self, None if the node is virtual
 	"""
 	def get_key(self):
-		return None
+		return self.key
 
 
 	"""returns the value
@@ -41,7 +41,7 @@ class AVLNode(object):
 	@returns: the value of self, None if the node is virtual
 	"""
 	def get_value(self):
-		return None
+		return self.value
 
 
 	"""returns the left child
@@ -49,7 +49,7 @@ class AVLNode(object):
 	@returns: the left child of self, None if there is no left child (if self is virtual)
 	"""
 	def get_left(self):
-		return None
+		return self.left
 
 
 	"""returns the right child
@@ -58,7 +58,7 @@ class AVLNode(object):
 	@returns: the right child of self, None if there is no right child (if self is virtual)
 	"""
 	def get_right(self):
-		return None
+		return self.right
 
 
 	"""returns the parent 
@@ -67,7 +67,7 @@ class AVLNode(object):
 	@returns: the parent of self, None if there is no parent
 	"""
 	def get_parent(self):
-		return None
+		return self.parent
 
 
 	"""returns the height
@@ -76,7 +76,7 @@ class AVLNode(object):
 	@returns: the height of self, -1 if the node is virtual
 	"""
 	def get_height(self):
-		return -1
+		return self.height
 
 
 	"""returns the size of the subtree
@@ -85,7 +85,7 @@ class AVLNode(object):
 	@returns: the size of the subtree of self, 0 if the node is virtual
 	"""
 	def get_size(self):
-		return 0
+		return self.size
 
 
 	"""sets key
@@ -94,8 +94,7 @@ class AVLNode(object):
 	@param key: key
 	"""
 	def set_key(self, key):
-		return None
-
+		self.key=key
 
 	"""sets value
 
@@ -103,7 +102,7 @@ class AVLNode(object):
 	@param value: data
 	"""
 	def set_value(self, value):
-		return None
+		self.value=value
 
 
 	"""sets left child
@@ -112,7 +111,7 @@ class AVLNode(object):
 	@param node: a node
 	"""
 	def set_left(self, node):
-		return None
+		self.left=node
 
 
 	"""sets right child
@@ -121,7 +120,7 @@ class AVLNode(object):
 	@param node: a node
 	"""
 	def set_right(self, node):
-		return None
+		self.right=node
 
 
 	"""sets parent
@@ -130,8 +129,7 @@ class AVLNode(object):
 	@param node: a node
 	"""
 	def set_parent(self, node):
-		return None
-
+		self.parent=node
 
 	"""sets the height of the node
 
@@ -139,7 +137,7 @@ class AVLNode(object):
 	@param h: the height
 	"""
 	def set_height(self, h):
-		return None
+		self.height=h
 
 
 	"""sets the size of node
@@ -148,7 +146,7 @@ class AVLNode(object):
 	@param s: the size
 	"""
 	def set_size(self, s):
-		return None
+		self.size=s
 
 
 	"""returns whether self is not a virtual node 
@@ -157,9 +155,13 @@ class AVLNode(object):
 	@returns: False if self is a virtual node, True otherwise.
 	"""
 	def is_real_node(self):
-		return False
+		if self.key!=None:
+			return True
+		else:
+			return False
 
-
+	def bf(self):
+		return (self.get_left().get_height()-self.get_right().get_height())
 
 """
 A class implementing an AVL tree.
@@ -172,8 +174,8 @@ class AVLTree(object):
 
 	"""
 	def __init__(self):
-		self.root = None
-		# add your fields here
+		self.root =AVLNode(None,None)
+
 
 
 
@@ -185,6 +187,14 @@ class AVLTree(object):
 	@returns: the value corresponding to key.
 	"""
 	def search(self, key):
+		node=self.root
+		while node.is_real_node()==True:
+			if node.get_key()==key:
+				return node
+			elif node.get_key()<key:
+				node=node.get_left()
+			elif node.get_key()>key:
+				node = node.get_right()
 		return None
 
 
@@ -199,7 +209,27 @@ class AVLTree(object):
 	@returns: the number of rebalancing operation due to AVL rebalancing
 	"""
 	def insert(self, key, val):
-		return -1
+		num_of_rotaions=0
+		node = self.root
+		while node.is_real_node()==True:
+			if node.get_key()<key:
+				node.set_height(node.get_height()+1)
+				node.set_size(node.get_size()+1)
+				node=node.get_left()
+			elif node.get_key()>key:
+				node.set_height(node.get_height() + 1)
+				node.set_size(node.get_size() + 1)
+				node = node.get_right()
+		node = AVLNode(key, val)
+		node.set_height(0)
+		node.set_left(AVLNode(None, None))
+		node.get_left().set_parent(node)
+		node.set_right(AVLNode(None, None))
+		node.get_right().set_parent(node)
+		while node.get_parent()!=None:
+			if -1<node.bf() or node.bf()>1:
+				if node.bf()=2 and node.get_left().bf()=1
+
 
 
 	"""deletes node from the dictionary
