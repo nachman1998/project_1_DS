@@ -155,17 +155,28 @@ class AVLNode(object):
 	@returns: False if self is a virtual node, True otherwise.
 	"""
 	def is_real_node(self):
-		if self.key!=None:
+		if self.key!= None:
 			return True
 		else:
 			return False
 
 	def bf(self):
-		return (self.get_left().get_height()-self.get_right().get_height())
+		left_son_hight=self.get_left().get_height()
+		right_son_hight=self.get_right().get_height()
+		return (left_son_hight-right_son_hight)
 
+	def set_virtual_sons(self):
+		self.set_left(AVLNode(None, None))
+		self.get_left().set_parent(self)
+		self.set_right(AVLNode(None, None))
+		self.get_right().set_parent(self)
 """
 A class implementing an AVL tree.
 """
+
+
+
+
 
 class AVLTree(object):
 
@@ -197,7 +208,35 @@ class AVLTree(object):
 				node = node.get_right()
 		return None
 
+	def left_to_right_roll(self,node_l,node_r):
+		node_r.set_left(node_l.get_right())
+		node_r.get_left().set_parent(node_r)
+		node_l.set_right(node_r)
+		node_l.set_parent(node_r.get_parent())
+		if node_l.get_parent()!=None:
+			if node_l.get_parent().get_left()==node_r:
+				node_l.get_parent().set_left(node_l)
+			else:
+				node_l.get_parent().set_right(node_l)
+		else:
+			self.root=node_l
+		node_r.set_parent(node_l)
+		return node_l
 
+	def right_to_left_roll(self,node_l,node_r):
+		node_l.set_right(node_r.get_left())
+		node_l.get_right().set_parent(node_l)
+		node_r.set_left(node_l)
+		node_r.set_parent(node_l.get_parent())
+		if node_r.get_parent()!=None:
+			if node_r.get_parent().get_left()==node_l:
+				node_r.get_parent().set_left(node_r)
+			else:
+				node_r.get_parent().set_right(node_r)
+		else:
+			self.root=node_r
+		node_l.set_parent(node_r)
+		return node_r
 	"""inserts val at position i in the dictionary
 
 	@type key: int
@@ -213,25 +252,48 @@ class AVLTree(object):
 		node = self.root
 		while node.is_real_node()==True:
 			if node.get_key()<key:
-				node.set_height(node.get_height()+1)
 				node.set_size(node.get_size()+1)
-				node=node.get_left()
+				node=node.get_right()
 			elif node.get_key()>key:
-				node.set_height(node.get_height() + 1)
 				node.set_size(node.get_size() + 1)
-				node = node.get_right()
-		node = AVLNode(key, val)
+				node = node.get_left()
+		node.set_key(key)
+		node.set_value(val)
 		node.set_height(0)
-		node.set_left(AVLNode(None, None))
-		node.get_left().set_parent(node)
-		node.set_right(AVLNode(None, None))
-		node.get_right().set_parent(node)
-		while node.get_parent()!=None:
-			if -1<node.bf() or node.bf()>1:
-				if node.bf()=2 and node.get_left().bf()=1
-
-
-
+		node.set_virtual_sons()
+		y=node.get_parent()
+		while y!=None:
+			perent_height_after=1+max(y.get_right().get_height(),y.get_left().get_height())
+			if perent_height_after==y.get_height():
+				return num_of_rotaions
+			y.set_height(perent_height_after)
+			if -1>y.bf() or y.bf()>1:
+				if y.bf()==2:
+					if y.get_left().bf()==1:
+						y=self.left_to_right_roll(y.get_left(), y)
+						y.get_right().set_height(y.get_right().get_height()-2)
+						num_of_rotaions+=1
+					if y.get_left().bf()==-1:
+						y.set_height(y.get_height()-2)
+						y.get_left().set_height(y.get_left().get_height()-1)
+						y.get_left().get_right().set_height(y.get_left().get_right().get_height()+1)
+						l_node_after_roll = self.right_to_left_roll(y.get_left(), y.get_left().get_right())
+						y = self.left_to_right_roll(l_node_after_roll, y)
+						num_of_rotaions += 2
+				if y.bf()==-2:
+					if y.get_right().bf()==-1:
+						y=self.right_to_left_roll(y,y.get_right())
+						y.get_left().set_height(y.get_left().get_height()-2)
+						num_of_rotaions += 1
+					if y.get_right().bf()==1:
+						y.set_height(y.get_height() - 2)
+						y.get_right().set_height(y.get_right().get_height() - 1)
+						y.get_right().get_left().set_height(y.get_right().get_left().get_height() + 1)
+						r_node_after_roll=self.left_to_right_roll(y.get_right().get_left(), y.get_right())
+						y=self.right_to_left_roll(y,r_node_after_roll)
+						num_of_rotaions+=2
+			y=y.get_parent()
+		return num_of_rotaions
 	"""deletes node from the dictionary
 
 	@type node: AVLNode
@@ -323,3 +385,74 @@ class AVLTree(object):
 	"""
 	def get_root(self):
 		return None
+	"""================================================delate============================================"""
+
+	def printt(self):
+		out = ""
+		for row in self.printree(self.root):  # need printree.py file
+			out = out + row + "\n"
+		print(out)
+
+	def printree(self, t, bykey=True):
+		# for row in trepr(t, bykey):
+		#        print(row)
+		return self.trepr(t, False)
+
+	def trepr(self, t, bykey=True):
+		if t == None:
+			return ["#"]
+		thistr = str(t.key)
+		return self.conc(self.trepr(t.left, bykey), thistr, self.trepr(t.right, bykey))
+
+	def conc(self, left, root, right):
+		lwid = len(left[-1])
+		rwid = len(right[-1])
+		rootwid = len(root)
+		result = [(lwid + 1) * " " + root + (rwid + 1) * " "]
+		ls = self.leftspace(left[0])
+		rs = self.rightspace(right[0])
+		result.append(ls * " " + (lwid - ls) * "_" + "/" + rootwid *
+					  " " + "\\" + rs * "_" + (rwid - rs) * " ")
+		for i in range(max(len(left), len(right))):
+			row = ""
+			if i < len(left):
+				row += left[i]
+			else:
+				row += lwid * " "
+			row += (rootwid + 2) * " "
+			if i < len(right):
+				row += right[i]
+			else:
+				row += rwid * " "
+			result.append(row)
+		return result
+
+	def leftspace(self, row):
+		# row is the first row of a left node
+		# returns the index of where the second whitespace starts
+		i = len(row) - 1
+		while row[i] == " ":
+			i -= 1
+		return i + 1
+
+	def rightspace(self, row):
+		# row is the first row of a right node
+		# returns the index of where the first whitespace ends
+		i = 0
+		while row[i] == " ":
+			i += 1
+		return i
+
+	"""========================================================================================================"""
+
+tree=AVLTree()
+tree.insert(12,12)
+tree.insert(13,12)
+tree.insert(14,12)
+tree.insert(15,12)
+tree.insert(16,12)
+tree.insert(17,12)
+tree.insert(1,12)
+tree.insert(2,12)
+tree.insert(3,12)
+tree.printt()
