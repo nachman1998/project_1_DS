@@ -203,11 +203,20 @@ class AVLTree(object):
 			if node.get_key()==key:
 				return node
 			elif node.get_key()<key:
-				node=node.get_left()
+				node=node.get_right()
 			elif node.get_key()>key:
-				node = node.get_right()
+				node = node.get_left()
 		return None
-
+	def sucssesor(self,node):
+		if node.get_right().is_real_node()==True:
+			node=node.get_right()
+			while node.get_left().is_real_node()==True:
+				node=node.get_left()
+			return node
+		else:
+			while node.get_parent()!=None and node.get_parent().get_right()==node:
+				node=node.get_parent()
+		return node
 	def left_to_right_roll(self,node_l,node_r):
 		node_r.set_left(node_l.get_right())
 		node_r.get_left().set_parent(node_r)
@@ -237,6 +246,54 @@ class AVLTree(object):
 			self.root=node_r
 		node_l.set_parent(node_r)
 		return node_r
+
+	def rebalnce_from_y_node(self,y):
+		num_of_rotaions=0
+		while y!=None:
+			perent_height_after=1+max(y.get_right().get_height(),y.get_left().get_height())
+			if perent_height_after==y.get_height():
+				return num_of_rotaions
+			y.set_height(perent_height_after)
+			if -1>y.bf() or y.bf()>1:
+				if y.bf()==2:
+					if y.get_left().bf()==1:
+						y=self.left_to_right_roll(y.get_left(), y)
+						y.get_right().set_height(1+max(y.get_right().get_right().get_height(),y.get_right().get_left().get_height()))
+						y.set_height(1+max(y.get_right().get_height(),y.get_left().get_height()))
+						y.get_right().set_size(1 + (y.get_right().get_right().get_size() + y.get_right().get_left().get_size()))
+						y.set_size(1 + (y.get_right().get_size() + y.get_left().get_size()))
+						num_of_rotaions+=1
+					if y.get_left().bf()==-1:
+						l_node_after_roll = self.right_to_left_roll(y.get_left(), y.get_left().get_right())
+						y = self.left_to_right_roll(l_node_after_roll, y)
+						y.get_left().set_height(1 + max(y.get_left().get_right().get_height(), y.get_left().get_left().get_height()))
+						y.get_right().set_height(1 + max(y.get_right().get_right().get_height(), y.get_right().get_left().get_height()))
+						y.set_height(1 + max(y.get_right().get_height(), y.get_left().get_height()))
+						y.get_left().set_size(1 + (y.get_left().get_right().get_size()+ y.get_left().get_left().get_size()))
+						y.get_right().set_size(1 + (y.get_right().get_right().get_size()+ y.get_right().get_left().get_size()))
+						y.set_size(1 + (y.get_right().get_size()+ y.get_left().get_size()))
+						num_of_rotaions += 2
+				if y.bf()==-2:
+					if y.get_right().bf()==-1:
+						y=self.right_to_left_roll(y,y.get_right())
+						y.get_left().set_height(1 + max(y.get_left().get_right().get_height(), y.get_left().get_left().get_height()))
+						y.set_height(1 + max(y.get_right().get_height(), y.get_left().get_height()))
+						y.get_left().set_size(1 + (y.get_left().get_right().get_size() + y.get_left().get_left().get_size()))
+						y.set_size(1 + (y.get_right().get_size() + y.get_left().get_size()))
+						num_of_rotaions += 1
+					if y.get_right().bf()==1:
+						r_node_after_roll=self.left_to_right_roll(y.get_right().get_left(), y.get_right())
+						y=self.right_to_left_roll(y,r_node_after_roll)
+						y.get_left().set_height(1 + max(y.get_left().get_right().get_height(), y.get_left().get_left().get_height()))
+						y.get_right().set_height(1 + max(y.get_right().get_right().get_height(), y.get_right().get_left().get_height()))
+						y.set_height(1 + max(y.get_right().get_height(), y.get_left().get_height()))
+						y.get_left().set_size(1 + (y.get_left().get_right().get_size() + y.get_left().get_left().get_size()))
+						y.get_right().set_size(1 + (y.get_right().get_right().get_size() + y.get_right().get_left().get_size()))
+						y.set_size(1 + (y.get_right().get_size() + y.get_left().get_size()))
+						num_of_rotaions+=2
+			y=y.get_parent()
+		return num_of_rotaions
+
 	"""inserts val at position i in the dictionary
 
 	@type key: int
@@ -260,40 +317,43 @@ class AVLTree(object):
 		node.set_key(key)
 		node.set_value(val)
 		node.set_height(0)
+		node.set_size(1)
 		node.set_virtual_sons()
 		y=node.get_parent()
-		while y!=None:
-			perent_height_after=1+max(y.get_right().get_height(),y.get_left().get_height())
-			if perent_height_after==y.get_height():
-				return num_of_rotaions
-			y.set_height(perent_height_after)
-			if -1>y.bf() or y.bf()>1:
-				if y.bf()==2:
-					if y.get_left().bf()==1:
-						y=self.left_to_right_roll(y.get_left(), y)
-						y.get_right().set_height(y.get_right().get_height()-2)
-						num_of_rotaions+=1
-					if y.get_left().bf()==-1:
-						y.set_height(y.get_height()-2)
-						y.get_left().set_height(y.get_left().get_height()-1)
-						y.get_left().get_right().set_height(y.get_left().get_right().get_height()+1)
-						l_node_after_roll = self.right_to_left_roll(y.get_left(), y.get_left().get_right())
-						y = self.left_to_right_roll(l_node_after_roll, y)
-						num_of_rotaions += 2
-				if y.bf()==-2:
-					if y.get_right().bf()==-1:
-						y=self.right_to_left_roll(y,y.get_right())
-						y.get_left().set_height(y.get_left().get_height()-2)
-						num_of_rotaions += 1
-					if y.get_right().bf()==1:
-						y.set_height(y.get_height() - 2)
-						y.get_right().set_height(y.get_right().get_height() - 1)
-						y.get_right().get_left().set_height(y.get_right().get_left().get_height() + 1)
-						r_node_after_roll=self.left_to_right_roll(y.get_right().get_left(), y.get_right())
-						y=self.right_to_left_roll(y,r_node_after_roll)
-						num_of_rotaions+=2
-			y=y.get_parent()
-		return num_of_rotaions
+		return self.rebalnce_from_y_node(y)
+
+	def remove_and_reconect (self,node):
+		node_of_intrest = node.get_parent()
+		if node_of_intrest != None:
+			if node_of_intrest.get_left() == node:
+				if node.get_right().is_real_node() == True:
+					node_of_intrest.set_left(node.get_right())
+					node.get_right().set_parent(node_of_intrest)
+				elif node.get_left().is_real_node() == True:
+					node_of_intrest.set_left(node.get_left())
+					node.get_left().set_parent(node_of_intrest)
+				else:
+					node_of_intrest.set_left(node.get_left())
+					node.get_left().set_parent(node_of_intrest)
+			else:
+				if node.get_right().is_real_node() == True:
+					node_of_intrest.set_right(node.get_right())
+					node.get_right().set_parent(node_of_intrest)
+				elif node.get_left().is_real_node() == True:
+					node_of_intrest.set_right(node.get_left())
+					node.get_left().set_parent(node_of_intrest)
+				else:
+					node_of_intrest.set_right(node.get_left())
+					node.get_left().set_parent(node_of_intrest)
+			return node_of_intrest
+		else:
+			if node.get_right().is_real_node() == True:
+				self.root=node.get_right()
+				node.get_right().set_parent(None)
+			elif node.get_left().is_real_node() == True:
+				self.root = node.get_left()
+				node.get_left().set_parent(None)
+			return self.root
 	"""deletes node from the dictionary
 
 	@type node: AVLNode
@@ -302,8 +362,58 @@ class AVLTree(object):
 	@returns: the number of rebalancing operation due to AVL rebalancing
 	"""
 	def delete(self, node):
-		return -1
-
+		num_of_rotaions=0
+		y=None
+		if node.get_right().is_real_node()==False or node.get_left().is_real_node()==False:
+			y=self.remove_and_reconect(node)
+		else:
+			sucssesor=self.sucssesor(node)
+			node.set_key(sucssesor.get_key())
+			node.set_value(sucssesor.get_value())
+			y=self.remove_and_reconect(sucssesor)
+		while y!=None:
+			y.set_size(y.get_size()-1)
+			perent_height_after=1+max(y.get_right().get_height(),y.get_left().get_height())
+			if perent_height_after==y.get_height() and abs(y.bf())<2:
+				return num_of_rotaions
+			y.set_height(perent_height_after)
+			if -1>y.bf() or y.bf()>1:
+				if y.bf()==2:
+					if y.get_left().bf()==1 or y.get_left().bf()==0:
+						y=self.left_to_right_roll(y.get_left(), y)
+						y.get_right().set_height(1 + max(y.get_right().get_right().get_height(), y.get_right().get_left().get_height()))
+						y.set_height(1 + max(y.get_right().get_height(), y.get_left().get_height()))
+						##
+						#
+						#
+						num_of_rotaions+=1
+					if y.get_left().bf()==-1:
+						l_node_after_roll = self.right_to_left_roll(y.get_left(), y.get_left().get_right())
+						y = self.left_to_right_roll(l_node_after_roll, y)
+						y.get_left().set_height(1 + max(y.get_left().get_right().get_height(), y.get_left().get_left().get_height()))
+						y.get_right().set_height(1 + max(y.get_right().get_right().get_height(), y.get_right().get_left().get_height()))
+						y.set_height(1 + max(y.get_right().get_height(), y.get_left().get_height()))
+						#
+						#
+						#
+						num_of_rotaions += 2
+				if y.bf()==-2:
+					if y.get_right().bf()==-1 or y.get_right().bf()==0:
+						y=self.right_to_left_roll(y,y.get_right())
+						y.get_left().set_height(1 + max(y.get_left().get_right().get_height(), y.get_left().get_left().get_height()))
+						y.set_height(1 + max(y.get_right().get_height(), y.get_left().get_height()))
+						#
+						#
+						num_of_rotaions += 1
+					if y.get_right().bf()==1:
+						r_node_after_roll=self.left_to_right_roll(y.get_right().get_left(), y.get_right())
+						y=self.right_to_left_roll(y,r_node_after_roll)
+						y.get_left().set_height(1 + max(y.get_left().get_right().get_height(), y.get_left().get_left().get_height()))
+						y.get_right().set_height(1 + max(y.get_right().get_right().get_height(), y.get_right().get_left().get_height()))
+						y.set_height(1 + max(y.get_right().get_height(), y.get_left().get_height()))
+						num_of_rotaions+=2
+			y=y.get_parent()
+		return num_of_rotaions
 
 	"""returns an array representing dictionary 
 
@@ -311,9 +421,15 @@ class AVLTree(object):
 	@returns: a sorted list according to key of touples (key, value) representing the data structure
 	"""
 	def avl_to_array(self):
-		return None
-
-
+		order_lst=[]
+		def avl_to_array_rec(node,lst):
+			if node.is_real_node()==False:
+				return
+			avl_to_array_rec(node.get_left(),lst)
+			lst.append((node.key,node.value))
+			avl_to_array_rec(node.get_right(),lst)
+		avl_to_array_rec(self.root,order_lst)
+		return order_lst
 	"""returns the number of items in dictionary 
 
 	@rtype: int
@@ -335,8 +451,11 @@ class AVLTree(object):
 	"""
 	def split(self, node):
 		return None
-
-	
+	def min(self):
+		node=self.get_root()
+		while node.get_left().is_real_node()==True:
+			node=node.get_left()
+		return node
 	"""joins self with key and another AVLTree
 
 	@type tree: AVLTree 
@@ -351,9 +470,36 @@ class AVLTree(object):
 	@returns: the absolute value of the difference between the height of the AVL trees joined
 	"""
 	def join(self, tree, key, val):
-		return None
-
-
+		abs_difference_in_height=abs(tree.root.get_height()-self.root.get_height()+1)
+		if self.min().get_key()>key:
+			tree.join(self, key, val)
+			self.root=tree.root
+			return
+		else:
+			new_subtree_node=AVLNode(key,val)
+			new_subtree_node.set_left(self.root)
+			self.root.set_parent(new_subtree_node)
+			conecting_node=tree.root
+			if tree.root.get_height()!=self.root.get_height() and tree.root.get_height()!=(self.root.get_height()+1):
+				while conecting_node.get_left().is_real_node()==True :
+					if abs(conecting_node.get_left().get_height() - self.root.get_height()) <= 1:
+						break
+					conecting_node=conecting_node.get_left()
+				new_subtree_node.set_right(conecting_node.get_left())
+				conecting_node.get_left().set_parent(new_subtree_node)
+				conecting_node.set_left(new_subtree_node)
+				new_subtree_node.set_parent(conecting_node)
+				new_subtree_node.set_height(1 + max(new_subtree_node.get_right().get_height(), new_subtree_node.get_left().get_height()))
+				new_subtree_node.set_size(1 + (new_subtree_node.get_right().get_size()+ new_subtree_node.get_left().get_size()))
+				self.root=tree.root
+				self.rebalnce_from_y_node(conecting_node)
+			else:
+				new_subtree_node.set_right(conecting_node)
+				conecting_node.set_parent(new_subtree_node)
+				new_subtree_node.set_height(1 + max(new_subtree_node.get_right().get_height(), new_subtree_node.get_left().get_height()))
+				new_subtree_node.set_size(1 + (new_subtree_node.get_right().get_size() + new_subtree_node.get_left().get_size()))
+				self.root=new_subtree_node
+		return abs_difference_in_height
 	"""compute the rank of node in the self
 
 	@type node: AVLNode
@@ -384,7 +530,7 @@ class AVLTree(object):
 	@returns: the root, None if the dictionary is empty
 	"""
 	def get_root(self):
-		return None
+		return self.root
 	"""================================================delate============================================"""
 
 	def printt(self):
@@ -446,13 +592,47 @@ class AVLTree(object):
 	"""========================================================================================================"""
 
 tree=AVLTree()
-tree.insert(12,12)
-tree.insert(13,12)
-tree.insert(14,12)
-tree.insert(15,12)
-tree.insert(16,12)
-tree.insert(17,12)
-tree.insert(1,12)
+tree.insert(4,12)
 tree.insert(2,12)
+tree.insert(6,12)
+tree.insert(1,12)
 tree.insert(3,12)
+tree.insert(5,12)
+tree.insert(7,12)
+tree.insert(8,12)
+print(tree.avl_to_array())
+b=AVLTree()
+b.insert(50,12)
+b.insert(54,12)
+b.insert(56,12)
+b.insert(49,12)
+b.insert(46,12)
+b.insert(45,12)
+b.insert(43,12)
+b.insert(42,12)
+
+b.insert(60,12)
+b.insert(62,12)
+b.insert(65,12)
+b.insert(67,12)
+b.insert(61,12)
+b.insert(69,12)
+b.insert(76,12)
+b.insert(78,12)
+b.insert(129,12)
+b.insert(150,12)
+b.insert(99,12)
+b.insert(88,12)
+b.insert(90,12)
+b.insert(91,12)
+b.insert(93,12)
+b.insert(94,12)
+b.insert(95,12)
+b.insert(111,12)
+b.insert(121,12)
+b.insert(113,12)
+b.insert(118,12)
+tree.printt()
+b.printt()
+tree.join(b,40,40)
 tree.printt()
